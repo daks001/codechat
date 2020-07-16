@@ -72,12 +72,12 @@ a {
 }
 
 .chat-sidebar h2 {
-  font-size: 0.8rem;
+  font-size: 1.2rem;
   background: rgba(0, 0, 0, 0.1);
-  padding: 1%;
+  padding: 4%;
   margin-bottom: 10%;
   margin-top: 10%;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .chat-sidebar h3 {
