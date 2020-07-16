@@ -3,6 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
 const format_message = require('./utils/messages');
+const {user_join, get_curr_user, user_leave, get_room_users} = require('./utils/user');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,21 +16,32 @@ const botname = 'CodeChat Bot';
 
 //run when a client connects
 io.on('connection', (socket) => {
-  //welcome current user
-  socket.emit('message', format_message(botname, 'Welcome to CodeChat!')); //to single client
+  socket.on('join_room', ({username, room}) => {
+    const user = user_join(socket.id, username, room);
 
-  //broadcast when a user connects
-  socket.broadcast.emit('message', format_message(botname, 'A user has joined the chat')); //to all clients except the one connecting
+    socket.join(user.room);
 
-  //runs when client disconnects
-  socket.on('disconnect', () => {
-    io.emit('message', format_message(botname, 'A user has left the chat')); //to ALL clients
+    //welcome current user
+    socket.emit('message', format_message(botname, 'Welcome to CodeChat!')); //to single client
+
+    //broadcast when a user connects
+    socket.broadcast.to(user.room).emit('message', format_message(botname, `${user.username} has joined the chat`)); //to all clients except the one connecting
   });
 
   //listen for chat_message
   socket.on('chat_message', (msg) => {
+    const user = get_curr_user(socket.id);
+
     //emit to everybody
-    io.emit('message', format_message('User', msg));
+    io.to(user.room).emit('message', format_message(user.username, msg));
+  });
+
+  //runs when client disconnects
+  socket.on('disconnect', () => {
+    const user = user_leave(socket.id);
+    if (user) {
+      io.to(user.room).emit('message', format_message(botname, `${user.username} has left the chat`)); //to ALL clients in the room
+    }
   });
 });
 
