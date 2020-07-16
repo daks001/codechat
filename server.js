@@ -26,6 +26,9 @@ io.on('connection', (socket) => {
 
     //broadcast when a user connects
     socket.broadcast.to(user.room).emit('message', format_message(botname, `${user.username} has joined the chat`)); //to all clients except the one connecting
+
+    //send users and room info
+    io.to(user.room).emit('room_users', {room: user.room, users: get_room_users(user.room)});
   });
 
   //listen for chat_message
@@ -41,6 +44,9 @@ io.on('connection', (socket) => {
     const user = user_leave(socket.id);
     if (user) {
       io.to(user.room).emit('message', format_message(botname, `${user.username} has left the chat`)); //to ALL clients in the room
+
+      //update users and room info
+    io.to(user.room).emit('room_users', {room: user.room, users: get_room_users(user.room)});
     }
   });
 });
